@@ -3,7 +3,7 @@
 This calculator is part of a project in the process of developing software for managing and calculating dates of "וסתות" in Jewish halacha, which will be published בעז"ה in the coming months.
 
 ## Installation 
-Installation requirements: python3.X+.
+Installation requirements: python3.X.
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the "tahara_calculator"
 
@@ -24,6 +24,7 @@ o = "עונה", when day == 1 and naight == 0.
 
 Each date must appear in a separate line
 
+### Note: Due to the multiplicity of methods in the הלכה, the calculation does not include a "וסת קבוע" test and is always calculated as a "וסת שאינו קבוע", check if there is a "וסת קבוע" among the dates.
 
 ```bash
 python calculator.py example_dates.txt
@@ -43,7 +44,7 @@ yaakovlwork@gmail.com
 ## Authors and acknowledgment
 Based on the amazing [pyluach](https://github.com/simlist/pyluach) package that helps process Hebrew dates.
 
-I Thank 'ה for all the graces and good people He has placed in my way.
+I Thank 'ה for all the graces and the good people He placed in my way.
 
 ## licenses
 [MIT](https://choosealicense.com/licenses/mit/)
