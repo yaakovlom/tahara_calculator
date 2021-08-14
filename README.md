@@ -36,6 +36,10 @@ or
 python calculator.py
 ```
 
+## Visuals
+
+![Sample calculation results](https://github.com/yaakovlom/tahara_calculator/blob/main/image.png)
+
 ## support
 Feel free to ask, review or comment on my email address:
 
