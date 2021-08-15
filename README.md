@@ -5,8 +5,6 @@ This calculator is part of a project in the process of developing software for m
 ## Installation 
 Installation requirements: python3.X.
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the "tahara_calculator"
-
 ## Usage
 Write down all the "ראייה" dates to calculate in a separate text file ([xxx.txt](https://github.com/yaakovlom/tahara_calculator/blob/main/example_dates.txt)).
 
