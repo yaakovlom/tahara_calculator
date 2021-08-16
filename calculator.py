@@ -197,8 +197,9 @@ def main():
     if export_file:
         export_results(export_file, lines)
     else:
+        print("")
         for line in lines:
-            print(line[:-2])
+            print(line[:-1])
 
 
 if __name__ == "__main__":
