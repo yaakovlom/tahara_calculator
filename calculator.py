@@ -58,18 +58,30 @@ weekday_dict = {
 }
 
 def read_periods_list_file(file_path:str):
+    #get txt from the dates file
     if os.path.isfile(file_path):
         with open(file_path, "r") as f:
             date_list =  f.readlines()
         return date_list
 
+def export_results(file_name, lines):
+    
+#export results in a file
+    try:
+        with open(file_name, "w") as f:
+            f.writelines(lines)
+    except NameError as err:
+        print(err)
+
 def convert_txt_to_period(date_txt):
+    #convert date text to period
     details = date_txt.split()
-    digits_of_date = [int(n) for n in details[0].split("/")]
-    ona = int(details[1][0])
-    if ona == 1 or ona == 0:
-        period = Period(dates.HebrewDate(*digits_of_date[::-1]), ona)
-    return period
+    if len(details) > 1:
+        digits_of_date = [int(n) for n in details[0].split("/")]
+        ona = int(details[1][0])
+        if ona == 1 or ona == 0:
+            period = Period(dates.HebrewDate(*digits_of_date[::-1]), ona)
+        return period
 
 def get_month_len(month:hebrewcal.Month):
     #get the length of the month
@@ -78,14 +90,15 @@ def get_month_len(month:hebrewcal.Month):
     return month_len
 
 def get_seclusions(period, haflagot_list=None):
+    #get list of seclusions from a period
     date = period.date
     year = date.year
     month = date.month
     day = date.day
     month_len = get_month_len(hebrewcal.Month(year, month))
-    ona_beinonit30 = Seclusion(period, 'עונה בינונית 03', date + 29, period.ona)
+    ona_beinonit30 = Seclusion(period, 'עונה בינונית 30', date + 29, period.ona)
     veset_hachodesh = Seclusion(period, 'וסת החודש', date + month_len, period.ona)
-    ona_beinonit31 = Seclusion(period, 'עונה בינונית 13', date + 30, period.ona)
+    ona_beinonit31 = Seclusion(period, 'עונה בינונית 31', date + 30, period.ona)
     seclusion_list = [ona_beinonit30, veset_hachodesh, ona_beinonit31]
     if period.haflaga:
         haflaga = Seclusion(period, 'הפלגה', date + period.haflaga - 1, period.ona)
@@ -93,9 +106,9 @@ def get_seclusions(period, haflagot_list=None):
     if haflagot_list:
         if len(haflagot_list) >= 2:
             haflagot_lechumra = []
-            for h1 in haflagot_list[-1:0:-1]:
+            for h1 in haflagot_list[-1::-1]:
                 akira = False
-                for h2 in haflagot_list[-1:int(h1):-1]:
+                for h2 in haflagot_list[-1:haflagot_list.index(h1):-1]:
                     if h2 > h1:
                         akira = True
                 if not akira:
@@ -115,27 +128,49 @@ def get_seclusions(period, haflagot_list=None):
     return seclusion_list
 
 def main():
+
+    #check the dates file
     if len(sys.argv) > 1:
         file_path = sys.argv[1]
     else:
-        file_path = input("Plase enter the dates file path:\n")
-    date_list = read_periods_list_file(file_path)
+        file_path = input("Date data file not found. Please enter the date file path:\n")
+    
+    for i in range(3):
+        date_list = read_periods_list_file(file_path)
+        if date_list:
+            break
+        else:
+            file_path = input("Date data file not found. Please enter the date file path:\n")
+    if not date_list:
+        print("Date data file not found.\n")
+        exit()
+
+    #check if export file path is in args
+    export_file = None
+    if len(sys.argv) > 2:
+        export_file = sys.argv[2]
+
+    #convert txt to poriods
     periods_list = []
     for date in date_list:
         try:
             period = convert_txt_to_period(date)
-            periods_list.append(period)
+            if period:
+                periods_list.append(period)
         except NameError as err:
             print(err)
-    
-    seclusion_list = []
 
+    periods_dates = {period.date: period for period in periods_list}
+    
+    #get the "haflagot" form periods
+    seclusion_list = []
     for i, period in enumerate(periods_list[1:]):
         haflaga = period.date - periods_list[i].date + 1
         period.haflaga = int(haflaga)
     
     haflagot_list = [period.haflaga for period in periods_list[1:]]
     
+    #get seclusions from periods
     for i, period in enumerate(periods_list):
         if haflagot_list:
             seclusion_list = get_seclusions(period, haflagot_list[:i])
@@ -143,24 +178,27 @@ def main():
             seclusion_list = get_seclusions(period)
         period.seclusion_list = seclusion_list
     
-    periods_dates = {period.date: period for period in periods_list}
-
-    print(":רשימת הפלגות\n"[::-1], haflagot_list)
-    print("\n" + ("-" * 25))
+    #set results
+    mid_line = "-" * 25
+    lines = [f"רשימת הפלגות:\n{haflagot_list}\n{mid_line}\n"]
 
     for period in periods_dates:
-        print((f":{period.hebrew_date_string()} ב{ona_dict[periods_dates[period].ona]} {weekday_dict[period.weekday()]}")[::-1])
+        lines.append((f"{period.hebrew_date_string()} ב{ona_dict[periods_dates[period].ona]} {weekday_dict[period.weekday()]}:\n"))
         for seclusion in periods_dates[period].seclusion_list:
             if type(seclusion) != list:
-                print((seclusion.name + f" - {seclusion.date.hebrew_date_string()} ב{ona_dict[seclusion.ona]} {weekday_dict[seclusion.weekday]}  ")[::-1])
+                lines.append(f"  {seclusion.name} - {seclusion.date.hebrew_date_string()} ב{ona_dict[seclusion.ona]} {weekday_dict[seclusion.weekday]}\n")
             else:
-                print((":הפלגות שלא נעקרו  ")[::-1])
+                lines.append(("  הפלגות שלא נעקרו:\n"))
                 for s in seclusion:
-                    print((f" - {s.date.hebrew_date_string()} ב{ona_dict[s.ona]} {weekday_dict[s.weekday]}     ")[::-1] + s.name)
-        print("\n" + ("-" * 25))
-
-
-
+                    lines.append(f"    {s.name} - {s.date.hebrew_date_string()} ב{ona_dict[s.ona]} {weekday_dict[s.weekday]}\n")
+        lines.append(mid_line + "\n")
+    
+    #export or print results
+    if export_file:
+        export_results(export_file, lines)
+    else:
+        for line in lines:
+            print(line[:-2])
 
 
 if __name__ == "__main__":
