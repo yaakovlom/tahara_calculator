@@ -25,15 +25,20 @@ Each date must appear in a separate line
 ### Note: Due to the multiplicity of methods in the הלכה, the calculation does not include a "וסת קבוע" test and is always calculated as a "וסת שאינו קבוע", check if there is a "וסת קבוע" among the dates.
 
 ```bash
-python calculator.py example_dates.txt
+python calculator.py
 ```
 
 or 
 
 ```bash
-python calculator.py
+python calculator.py example_dates.txt
 ```
 
+You can export the results to a file by adding another path:
+
+```bash
+python calculator.py example_dates.txt results.txt
+```
 ## Visuals
 
 ![Sample calculation results](https://github.com/yaakovlom/tahara_calculator/blob/main/image.png)
