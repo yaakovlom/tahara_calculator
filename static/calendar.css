@@ -89,6 +89,23 @@ body {
     cursor: pointer;
 }
 
+.days .day {
+    border-radius: 5px;
+    background-image: linear-gradient(to bottom, #ffffff, #ffd5d5);
+    background-size: 33% 100%;
+}
+
+.days .night {
+    border-radius: 5px;
+    background-image: linear-gradient(to bottom, #ffd5d5, #ffffff);
+    background-size: 33% 100%;
+}
+
+.days .whole {
+    border-radius: 5px;
+    background-color: #ffd5d5
+}
+
 .days div:hover {
     background-color: #f0f0f0;
 }

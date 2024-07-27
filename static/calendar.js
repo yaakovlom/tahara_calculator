@@ -50,15 +50,17 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 1; i <= lastDay; i++) {
             const currentDate = new Date(year, month, i + 1);
             const eventKey = dateToISO(currentDate);
-            const event = events[eventKey] && events[eventKey].note ? `<div class="event">${events[eventKey].note}</div>` : '';
+            const eventType = events[eventKey] ? events[eventKey].type : '';
+            const event = events[eventKey] ? `-${eventType}` : '';
+            const classEvent = events[eventKey] ? ` class="${eventType}"` : '';
             if (
                 i === new Date().getDate() &&
                 year === new Date().getFullYear() &&
                 month === new Date().getMonth()
             ) {
-                days += `<div class="today" data-date="${eventKey}">${getHebDay(date)} / ${i}${event}</div>`;
+                days += `<div class="today${event}" data-date="${eventKey}">${getHebDay(date)} / ${i}</div>`;
             } else {
-                days += `<div data-date="${eventKey}">${getHebDay(new Date(year, month, i))} / ${i}${event}</div>`;
+                days += `<div${classEvent} data-date="${eventKey}">${getHebDay(new Date(year, month, i))} / ${i}</div>`;
             }
         }
 
