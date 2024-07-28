@@ -73,7 +73,7 @@ def export_results(file_name, lines):
     except NameError as err:
         print(err)
 
-def convert_txt_to_period(date_txt):
+def convert_date_to_period(date_txt):
     #convert date text to period
     details = date_txt.split()
     if len(details) > 1:
@@ -129,36 +129,15 @@ def get_seclusions(period, haflagot_list=None):
 
 def main():
 
-    #check the dates file
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
+    # check args
+    if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
+        json_file = sys.argv[1]
     else:
-        file_path = input("Date data file not found. Please enter the date file path:\n")
-    
-    for i in range(3):
-        date_list = read_periods_list_file(file_path)
-        if date_list:
-            break
-        else:
-            file_path = input("Date data file not found. Please enter the date file path:\n")
-    if not date_list:
-        print("Date data file not found.\n")
-        exit()
+        print("Usage: python calculator.py <file>")
+        sys.exit(1)
 
-    #check if export file path is in args
-    export_file = None
-    if len(sys.argv) > 2:
-        export_file = sys.argv[2]
-
-    #convert txt to poriods
-    periods_list = []
-    for date in date_list:
-        try:
-            period = convert_txt_to_period(date)
-            if period:
-                periods_list.append(period)
-        except NameError as err:
-            print(err)
+    #convert date to poriode
+    period = convert_date_to_period(new_date, )
 
     periods_dates = {period.date: period for period in periods_list}
     

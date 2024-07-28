@@ -23,9 +23,31 @@ def get_events():
 
 @app.route('/api/events', methods=['POST'])
 def save_events():
-    print(request.json)
-    events = request.json
-    with open('events.json', 'w', encoding='utf-8') as f:
+    # print(request.json)
+    new_event = request.json
+    with open('events.json', 'r+', encoding='utf-8') as f:
+        # read the file
+        events = json.load(f)
+        if new_event:
+            flag = new_event['flag']
+            date = new_event['date']
+            target_event = new_event['event']
+
+            if flag == 'add':
+                if date not in events:
+                    events[date] = [target_event]
+                else:
+                    events[date].append(target_event)
+
+            elif flag == 'delete':
+                if target_event in events[date]:
+                    events.remove(target_event)
+                else:
+                    return jsonify({"message": "Event not found"}), 400
+                
+            else:
+                return jsonify({"message": "Invalid flag"}), 400
+            
         json.dump(events, f, ensure_ascii=False, indent=2)
     return jsonify({"message": "Events saved successfully"}), 200
 

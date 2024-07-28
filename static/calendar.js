@@ -52,7 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const eventKey = dateToISO(currentDate);
             const eventType = events[eventKey] ? events[eventKey].type : '';
             const event = events[eventKey] ? `-${eventType}` : '';
-            const classEvent = events[eventKey] ? ` class="${eventType}"` : '';
+            const classEvent = events[eventKey] ? ` class="${events[eventKey][0].type}` : '';
+            const eventList = events[eventKey] ? events[eventKey].slice(1).map(event => `-${event.type}`).join('') + '"' : '';
             if (
                 i === new Date().getDate() &&
                 year === new Date().getFullYear() &&
@@ -60,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ) {
                 days += `<div class="today${event}" data-date="${eventKey}">${getHebDay(date)} / ${i}</div>`;
             } else {
-                days += `<div${classEvent} data-date="${eventKey}">${getHebDay(new Date(year, month, i))} / ${i}</div>`;
+                days += `<div${classEvent}${eventList} data-date="${eventKey}">${getHebDay(new Date(year, month, i))} / ${i}</div>`;
             }
         }
 
@@ -113,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     addEventButton.addEventListener('click', () => {
-        eventModal.style.display = 'block';
+        openAddEventModal();
     });
 
     closeModal.addEventListener('click', () => {
@@ -126,36 +127,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const fetchEvents = () => {
+        fetch('/api/events')
+            .then(response => response.json())
+            .then(data => {
+                events = data;
+                renderCalendar(currentDate);
+            })
+            .catch(error => console.error('Error loading events:', error));
+    }
+
     saveEventButton.addEventListener('click', () => {
         const eventDate = eventDateInput.value;
         const eventNote = eventNoteInput.value;
         const eventType = document.getElementById('event-type').value || "מחזור";
 
+        const existingEvent = events[eventDate] ? events[eventDate].find(event => event.type === eventType) : null;
+        if (existingEvent) {
+            alert(`אירוע כבר קיים בתאריך זה`);
+            clearModel();
+            return;
+        }
+
         if (eventDate) {
-            events[eventDate] = { note: eventNote, type: eventType };
+            const newEvent = {type: eventType, note: eventNote};
+            saveEvents(eventDate, newEvent);
+            fetchEvents();
             renderCalendar(currentDate);
-            eventDateInput.value = '';
-            eventNoteInput.value = '';
-            document.getElementById('event-type').value = "מחזור";
-            eventModal.style.display = 'none';
-            saveEvents();
+            clearModel();
         }
     });
 
-    const saveEvents = () => {
+    const clearModel = () => {
+        eventDateInput.value = '';
+        eventNoteInput.value = '';
+        document.getElementById('event-type').value = "יום";
+        eventModal.style.display = 'none';
+    };
+
+    const saveEvents = (eventDate, newEvent) => {
         fetch('/api/events', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(events)
+            body: JSON.stringify({ flag: "add", date: eventDate, event: newEvent })
         })
         .then(response => response.json())
         .then(data => {
             console.log(data.message);
         })
         .catch(error => console.error('Error saving events:', error));
-        console.log('Saving events:', events);
+        console.log('Saving event:', newEvent);
     };
 
     //// ------------------ Hebrew Calendar ------------------ ////
@@ -198,13 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return header
     };
 
-    fetch('/api/events')
-        .then(response => response.json())
-        .then(data => {
-            events = data;
-            renderCalendar(currentDate);
-        })
-        .catch(error => console.error('Error loading events:', error));
-
+    fetchEvents();
     renderCalendar(currentDate);
 });
