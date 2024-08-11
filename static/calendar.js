@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveEventButton = document.getElementById('save-event');
     const eventDateInput = document.getElementById('event-date');
     const eventNoteInput = document.getElementById('event-note');
+    const eventTypeInput = document.getElementById('event-type');
+    const eventDayTimeInput = document.getElementById('event-daytime');
 
     let currentDate = new Date();
     let events = {};
@@ -44,30 +46,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let x = firstDayIndex; x > 0; x--) {
             const prevDate = new Date(year, month - 1, prevLastDay - x + 2);
-            days += `<div class="prev-date" data-date="${dateToISO(prevDate)}">${prevLastDay - x + 1}</div>`;
+            days += `<div class="prev-date" data-date="${dateToISO(prevDate)}"><span>${prevLastDay - x + 1}</span></div>`;
         }
 
         for (let i = 1; i <= lastDay; i++) {
             const currentDate = new Date(year, month, i + 1);
-            const eventKey = dateToISO(currentDate);
-            const eventType = events[eventKey] ? events[eventKey].type : '';
-            const event = events[eventKey] ? `-${eventType}` : '';
-            const classEvent = events[eventKey] ? ` class="${events[eventKey][0].type}` : '';
-            const eventList = events[eventKey] ? events[eventKey].slice(1).map(event => `-${event.type}`).join('') + '"' : '';
+            const dateKey = dateToISO(currentDate);
+            
+            // create night events
+            const nightEventsList = events[dateKey] ? events[dateKey].filter(event => event.dayTime === 'night') : [];
+            const nightEventElements = nightEventsList.map(event => `<button class="event ${event.type}" id="${event.id}" title="${event.note}"></button>`).join('');
+
+            // create day events
+            const dayEventsList = events[dateKey] ? events[dateKey].filter(event => event.dayTime === 'day') : [];
+            const dayEventElements = dayEventsList.map(event => `<button class="event ${event.type}" id="${event.id}" title="${event.note}"></button>`).join('');
+
+            // create events box
+            const eventsBox = `<span class="eventsBox"><span class="eventsBox night">${nightEventElements}</span><span class="eventsBox day">${dayEventElements}</span></span>`;
+
             if (
                 i === new Date().getDate() &&
                 year === new Date().getFullYear() &&
                 month === new Date().getMonth()
             ) {
-                days += `<div class="today${event}" data-date="${eventKey}">${getHebDay(date)} / ${i}</div>`;
+                days += `<div data-date="${dateKey}"><span>${getHebDay(date)} / ${i}</span>${eventsBox}</div>`;
             } else {
-                days += `<div${classEvent}${eventList} data-date="${eventKey}">${getHebDay(new Date(year, month, i))} / ${i}</div>`;
+                days += `<div data-date="${dateKey}"><span>${getHebDay(new Date(year, month, i))} / ${i}</span>${eventsBox}</div>`;
             }
         }
 
         for (let j = 1; j <= nextDays; j++) {
             const nextDate = new Date(year, month + 1, j + 1);
-            days += `<div class="next-date" data-date="${dateToISO(nextDate)}">${j}</div>`;
+            days += `<div class="next-date" data-date="${dateToISO(nextDate)}"><span>${j}</span></div>`;
         }
         daysContainer.innerHTML = days;
 
@@ -80,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     //// ------------------ Event Handlers ------------------ ////
 
     const handleDateClick = (event) => {
-        const target = event.target;
+        const target = event.target.closest('div');
         const date = target.dataset.date;
         openAddEventModal(date);
     };
@@ -127,20 +137,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const fetchEvents = () => {
-        fetch('/api/events')
-            .then(response => response.json())
-            .then(data => {
-                events = data;
-                renderCalendar(currentDate);
-            })
-            .catch(error => console.error('Error loading events:', error));
-    }
-
-    saveEventButton.addEventListener('click', () => {
+    saveEventButton.addEventListener('click', async () => {
         const eventDate = eventDateInput.value;
         const eventNote = eventNoteInput.value;
-        const eventType = document.getElementById('event-type').value || "מחזור";
+        const eventType = eventTypeInput.value || "menstrual";
+        const eventDayTime = eventDayTimeInput.value || "day";
 
         const existingEvent = events[eventDate] ? events[eventDate].find(event => event.type === eventType) : null;
         if (existingEvent) {
@@ -150,10 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (eventDate) {
-            const newEvent = {type: eventType, note: eventNote};
-            saveEvents(eventDate, newEvent);
-            fetchEvents();
-            renderCalendar(currentDate);
+            const newEvent = {type: eventType, dayTime: eventDayTime, note: eventNote};
+            updateEvents(eventDate, newEvent);
             clearModel();
         }
     });
@@ -161,24 +160,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearModel = () => {
         eventDateInput.value = '';
         eventNoteInput.value = '';
-        document.getElementById('event-type').value = "יום";
+        eventTypeInput.value = "menstrual";
+        eventDayTimeInput.value = "day";
         eventModal.style.display = 'none';
     };
 
-    const saveEvents = (eventDate, newEvent) => {
-        fetch('/api/events', {
+    async function fetchEventsFromServer() {
+        const response = await fetch('/api/events');
+        if (!response.ok) {
+            throw new Error('Failed to fetch events from the server');
+        }
+        events = await response.json();
+        renderCalendar(currentDate);
+    }
+
+    async function updateEvents(eventDate, newEvent) {
+        const response = await fetch('/api/events', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ flag: "add", date: eventDate, event: newEvent })
         })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data.message);
-        })
-        .catch(error => console.error('Error saving events:', error));
-        console.log('Saving event:', newEvent);
+
+        if (!response.ok) {
+            throw new Error('Failed to send new event to the server');
+        }
+    
+        return fetchEventsFromServer();
     };
 
     //// ------------------ Hebrew Calendar ------------------ ////
@@ -221,6 +230,5 @@ document.addEventListener('DOMContentLoaded', () => {
         return header
     };
 
-    fetchEvents();
-    renderCalendar(currentDate);
+    fetchEventsFromServer();
 });

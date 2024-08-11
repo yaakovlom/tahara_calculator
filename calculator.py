@@ -130,10 +130,10 @@ def get_seclusions(period, haflagot_list=None):
 def main():
 
     # check args
-    if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
+    if len(sys.argv) > 2 and os.path.isfile(sys.argv[1]):
         json_file = sys.argv[1]
     else:
-        print("Usage: python calculator.py <file>")
+        print("Usage: python calculator.py <file> <new date>")
         sys.exit(1)
 
     #convert date to poriode

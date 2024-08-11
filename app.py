@@ -25,31 +25,32 @@ def get_events():
 def save_events():
     # print(request.json)
     new_event = request.json
-    with open('events.json', 'r+', encoding='utf-8') as f:
+    with open('events.json', 'r', encoding='utf-8') as f:
         # read the file
         events = json.load(f)
-        if new_event:
-            flag = new_event['flag']
-            date = new_event['date']
-            target_event = new_event['event']
+    if new_event:
+        flag = new_event['flag']
+        date = new_event['date']
+        target_event = new_event['event']
 
-            if flag == 'add':
-                if date not in events:
-                    events[date] = [target_event]
-                else:
-                    events[date].append(target_event)
-
-            elif flag == 'delete':
-                if target_event in events[date]:
-                    events.remove(target_event)
-                else:
-                    return jsonify({"message": "Event not found"}), 400
-                
+        if flag == 'add':
+            if date not in events:
+                events[date] = [target_event]
             else:
-                return jsonify({"message": "Invalid flag"}), 400
+                events[date].append(target_event)
+
+        elif flag == 'delete':
+            if target_event in events[date]:
+                events.remove(target_event)
+            else:
+                return jsonify({"message": "Event not found"}), 400
             
+        else:
+            return jsonify({"message": "Invalid flag"}), 400
+
+    with open('events.json', 'w', encoding='utf-8') as f:
         json.dump(events, f, ensure_ascii=False, indent=2)
-    return jsonify({"message": "Events saved successfully"}), 200
+    return jsonify(events), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
