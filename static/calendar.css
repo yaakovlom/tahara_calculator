@@ -192,6 +192,11 @@ body {
     border-radius: 10px;
 }
 
+.submit {
+    display: flex;
+    justify-content: space-between;
+}
+
 .close {
     color: #aaa;
     float: left;

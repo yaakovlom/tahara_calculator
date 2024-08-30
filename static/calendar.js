@@ -11,10 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventModal = document.getElementById('event-modal');
     const closeModal = document.querySelector('.close');
     const saveEventButton = document.getElementById('save-event');
+    const deleteEventButton = document.getElementById('delete-event');
     const eventDateInput = document.getElementById('event-date');
     const eventNoteInput = document.getElementById('event-note');
     const eventTypeInput = document.getElementById('event-type');
     const eventDayTimeInput = document.getElementById('event-daytime');
+    const eventIdInput = document.getElementById('event-id');
 
     let currentDate = new Date();
     let events = {};
@@ -69,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 year === new Date().getFullYear() &&
                 month === new Date().getMonth()
             ) {
-                days += `<div data-date="${dateKey}"><span>${getHebDay(date)} / ${i}</span>${eventsBox}</div>`;
+                days += `<div class="today" data-date="${dateKey}"><span>${getHebDay(date)} / ${i}</span>${eventsBox}</div>`;
             } else {
                 days += `<div data-date="${dateKey}"><span>${getHebDay(new Date(year, month, i))} / ${i}</span>${eventsBox}</div>`;
             }
@@ -83,21 +85,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add event listeners to each date cell
         document.querySelectorAll('.days div').forEach(day => {
-        day.addEventListener('click', handleDateClick);
-    });
+            day.addEventListener('click', handleDateClick);
+        });
+
+        // Add event listeners to each event button
+        document.querySelectorAll('.event').forEach(event => {
+            event.addEventListener('click', handleEventClick);
+        });
     };
 
     //// ------------------ Event Handlers ------------------ ////
 
     const handleDateClick = (event) => {
+        if(event.target.type === 'submit') return;
         const target = event.target.closest('div');
         const date = target.dataset.date;
-        openAddEventModal(date);
+        openEventModal(date);
+    };
+
+    const handleEventClick = (event) => {
+        const target = event.target.closest('button');
+        const eventId = target.id;
+        const eventDate = target.parentElement.parentElement.parentElement.dataset.date;
+        const eventNote = target.title;
+        const eventType = target.classList[1];
+        const eventDayTime = target.parentElement.classList[1];
+
+        openEventModal(eventDate, eventType, eventDayTime, eventNote, eventId);
     };
     
-    const openAddEventModal = (date) => {
+    const openEventModal = (eventDate, eventType, eventDayTime, eventNote, eventId) => {
         eventModal.style.display = 'block';
-        eventDateInput.value = date;
+        eventDateInput.value = eventDate;
+        eventTypeInput.value = eventType || "menstrual";
+        eventDayTimeInput.value = eventDayTime || "day";
+        eventNoteInput.value = eventNote || '';
+        eventIdInput.value = eventId || '';
     };
     
     prevButton.addEventListener('click', () => {
@@ -124,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     addEventButton.addEventListener('click', () => {
-        openAddEventModal();
+        openEventModal();
     });
 
     closeModal.addEventListener('click', () => {
@@ -140,10 +163,11 @@ document.addEventListener('DOMContentLoaded', () => {
     saveEventButton.addEventListener('click', async () => {
         const eventDate = eventDateInput.value;
         const eventNote = eventNoteInput.value;
+        const eventId = eventIdInput.value || null;
         const eventType = eventTypeInput.value || "menstrual";
         const eventDayTime = eventDayTimeInput.value || "day";
 
-        const existingEvent = events[eventDate] ? events[eventDate].find(event => event.type === eventType) : null;
+        const existingEvent = events[eventDate] ? events[eventDate].find(event => event.type === eventType && event.dayTime === eventDayTime && eventId === null) : null;
         if (existingEvent) {
             alert(`אירוע כבר קיים בתאריך זה`);
             clearModel();
@@ -151,9 +175,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (eventDate) {
-            const newEvent = {type: eventType, dayTime: eventDayTime, note: eventNote};
-            updateEvents(eventDate, newEvent);
+            // console.log(eventDate, eventType, eventDayTime, eventNote, eventId);
+            const newEvent = {id: eventId, type: eventType, dayTime: eventDayTime, note: eventNote};
+            updateEvent(eventDate, newEvent, eventId ? "update" : "add");
             clearModel();
+        }
+    });
+
+    deleteEventButton.addEventListener('click', async () => {
+        const eventId = eventIdInput.value;
+        const eventDate = eventDateInput.value;
+        console.log(eventId);
+        if (eventId) {
+            const response = await fetch('/api/events', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ flag: "delete", date: eventDate, event: {id: eventId} })
+            })
+    
+            if (!response.ok) {
+                throw new Error('Failed to delete event from the server');
+            }
+        
+            clearModel();
+            return fetchEventsFromServer();
         }
     });
 
@@ -174,13 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar(currentDate);
     }
 
-    async function updateEvents(eventDate, newEvent) {
+    async function updateEvent(eventDate, event, flag) {
         const response = await fetch('/api/events', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ flag: "add", date: eventDate, event: newEvent })
+            body: JSON.stringify({ flag: flag, date: eventDate, event: event })
         })
 
         if (!response.ok) {

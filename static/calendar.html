@@ -53,9 +53,13 @@
             <input type="date" id="event-date">
             <label for="event-note">הערות:</label>
             <input type="text" id="event-note">
-            <button id="save-event">שמור</button>
+            <div class="submit">
+                <button id="delete-event">מחק</button>
+                <button id="save-event">שמור</button>
+            </div>
         </div>
     </div>
+    <input type="hidden" id="event-id">
 
     <script src="static/calendar.js"></script>
 </body>

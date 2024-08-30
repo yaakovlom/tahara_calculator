@@ -24,26 +24,47 @@ def get_events():
 @app.route('/api/events', methods=['POST'])
 def save_events():
     # print(request.json)
-    new_event = request.json
+    target_event = request.json
     with open('events.json', 'r', encoding='utf-8') as f:
-        # read the file
         events = json.load(f)
-    if new_event:
-        flag = new_event['flag']
-        date = new_event['date']
-        target_event = new_event['event']
+
+    if target_event:
+        flag = target_event['flag']
+        date = target_event['date']
+        event_id = int(target_event['event']['id']) if target_event['event']['id'] else None
 
         if flag == 'add':
             if date not in events:
-                events[date] = [target_event]
+                target_event['event']['id'] = 1
+                events[date] = [target_event['event']]
             else:
-                events[date].append(target_event)
+                target_event['event']['id'] = events[date][-1]['id'] + 1
+                events[date].append(target_event['event'])
+
+        elif flag == 'update':
+            event_found = False
+            if date in events:
+                for i, event in enumerate(events[date]):
+                    if event['id'] == event_id:
+                        events[date][i] = target_event['event']
+                        event_found = True
+                        break
+            if not event_found:
+                return jsonify({"Update events": "Event {} not found".format(target_event)}), 401
 
         elif flag == 'delete':
-            if target_event in events[date]:
-                events.remove(target_event)
-            else:
-                return jsonify({"message": "Event not found"}), 400
+            event_found = False
+            if date in events:
+                for i, event in enumerate(events[date]):
+                    print(type(event_id), type(event['id']))
+                    if event['id'] == event_id:
+                        print("yes")
+                        events[date].pop(i)
+                        event_found = True
+                        break
+                    
+            if not event_found:
+                return jsonify({"Delete events": "Event {} not found".format(target_event)}), 402
             
         else:
             return jsonify({"message": "Invalid flag"}), 400
