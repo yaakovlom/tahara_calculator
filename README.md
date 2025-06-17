@@ -1,57 +1,214 @@
-# tahara_calculator
+# Tahara Calculator
 
-This calculator is part of a project in the process of developing software for managing and calculating dates of "וסתות" in Jewish halacha, which will be published בעז"ה in the coming months.
+A Hebrew calendar-based calculator for determining forbidden days (prohibited periods) in accordance with Jewish religious law (Niddah/Family Purity laws).
 
-## Installation 
-Installation requirements: python3.X.
+## Overview
+
+The Tahara Calculator processes menstrual period data and calculates various types of forbidden days based on Hebrew calendar calculations, including:
+
+- **עונה בינונית** (Standard intervals) - 30 and 31 day cycles
+- **וסת החודש** (Monthly cycle) - Based on Hebrew month length
+- **הפלגה** (Personal intervals) - Individual cycle patterns
+- **אור זרוע** and **כרתי ופלתי** - Additional restrictions based on time of day
+- **הפלגות שלא נעקרו** (Unbroken patterns) - Historical interval patterns
+
+## Features
+
+- ✅ **Modular Architecture** - Clean separation of concerns across multiple modules
+- ✅ **Hebrew Calendar Support** - Full integration with Hebrew dates via `pyluach`
+- ✅ **Multiple Output Formats** - Console display or file export
+- ✅ **Error Handling** - Robust parsing and validation of input data
+- ✅ **Extensible Design** - Easy to add new calculation rules or output formats
+
+## Installation
+
+### Prerequisites
+
+- Python 3.7 or higher
+- pip package manager
+
+### Setup
+
+1. Clone or download the project files
+2. Navigate to the project directory:
+   ```cmd
+   cd c:\Users\yaakovl\Documents\python\tahara_calculator
+   ```
+
+3. Install required dependencies:
+   ```cmd
+   pip install -r requirements.txt
+   ```
 
 ## Usage
-Write down all the "ראייה" dates to calculate in a separate text file ([xxx.txt](https://github.com/yaakovlom/tahara_calculator/blob/main/example_dates.txt)).
 
-The dates must appear in the following format:
+### Basic Usage
 
-dd/mm/yyyy o
+Run the calculator with an input file:
 
-dd = hebrew date day
-
-mm = hebrew date maonth, When ניסן == 1 and אדר ב' == 13
-
-yyyy = hebrew date year
-
-o = "עונה", when day == 1 and naight == 0.
-
-Each date must appear in a separate line
-
-### Note: Due to the multiplicity of methods in the הלכה, the calculation does not include a "וסת קבוע" test and is always calculated as a "וסת שאינו קבוע", check if there is a "וסת קבוע" among the dates.
-
-```bash
-python calculator.py
+```cmd
+python main.py sample_dates.txt
 ```
 
-or 
+### Export to File
 
-```bash
-python calculator.py example_dates.txt
+Save results to a file:
+
+```cmd
+python main.py sample_dates.txt output.txt
 ```
 
-You can export the results to a file by adding another path:
+### Input File Format
 
-```bash
-python calculator.py example_dates.txt results.txt
+Create a text file with one period per line in the format:
 ```
-## Visuals
+day/month/year time_of_day
+```
 
-![Sample calculation results](https://github.com/yaakovlom/tahara_calculator/blob/main/image.png)
+Where:
+- `day/month/year` - Hebrew calendar date (e.g., `8/12/5785`)
+- `time_of_day` - `0` for night (ליל) or `1` for day (יום)
 
-## support
-Feel free to ask, review or comment on my email address:
+Example (`sample_dates.txt`):
+```
+8/12/5785 0
+9/11/5785 1
+10/10/5785 0
+11/8/5785 1
+```
 
-yaakovlwork@gmail.com
+## Project Structure
 
-## Authors and acknowledgment
-Based on the amazing [pyluach](https://github.com/simlist/pyluach) package that helps process Hebrew dates.
+```
+tahara_calculator/
+├── main.py                    # Main entry point
+├── cli.py                     # Command-line interface
+├── models.py                  # Data model classes
+├── parsers.py                 # Input parsing utilities
+├── calculations.py            # Core calculation engine
+├── processor.py               # Data processing coordination
+├── formatters.py              # Output formatting
+├── file_operations.py         # File I/O operations
+├── hebrew_calendar_utils.py   # Hebrew calendar utilities
+├── requirements.txt           # Python dependencies
+├── sample_dates.txt          # Example input file
+└── README.md                 # This file
+```
 
-I Thank 'ה for all the graces and the good people He placed in my way.
+### Module Descriptions
 
-## licenses
-[MIT](https://choosealicense.com/licenses/mit/)
+#### Core Modules
+
+- **`models.py`** - Defines `MenstrualPeriod` and `ForbiddenDay` classes
+- **`calculations.py`** - Main calculation logic for forbidden days
+- **`parsers.py`** - Converts text input to period objects
+- **`processor.py`** - Coordinates data processing workflow
+
+#### Interface Modules
+
+- **`cli.py`** - Command-line interface and user interaction
+- **`formatters.py`** - Output formatting and Hebrew text display
+- **`file_operations.py`** - File reading and writing operations
+
+#### Utility Modules
+
+- **`hebrew_calendar_utils.py`** - Hebrew calendar helper functions
+- **`main.py`** - Application entry point
+
+## Output Format
+
+The calculator produces Hebrew text output showing:
+
+1. **רשימת הפלגות** (List of intervals) - Cycle intervals between periods
+2. **Period Details** - For each period:
+   - Hebrew date and time of day
+   - List of forbidden days with their Hebrew dates and times
+
+Example output:
+```
+רשימת הפלגות:
+[30, 29, 60]
+-------------------------
+ח׳ אדר תשפ״ה בליל שבת:
+  אור זרוע - ז׳ ניסן תשפ״ה ביום שבת
+  עונה בינונית 30 - ח׳ ניסן תשפ״ה בליל ראשון
+  כרתי ופלתי - ח׳ ניסן תשפ״ה ביום ראשון
+  וסת החודש - ח׳ ניסן תשפ״ה בליל ראשון
+  עונה בינונית 31 - ט׳ ניסן תשפ״ה בליל שני
+-------------------------
+```
+
+## Dependencies
+
+- **`pyluach`** (>=2.2.0) - Hebrew calendar library for date calculations and conversions
+
+## Error Handling
+
+The application handles various error conditions:
+
+- **Missing input files** - Prompts user for valid file path (up to 3 attempts)
+- **Invalid date formats** - Skips invalid entries with error messages
+- **Empty input files** - Exits gracefully with informative message
+- **File I/O errors** - Reports specific file operation failures
+
+## Development
+
+### Adding New Calculation Rules
+
+To add new forbidden day calculations:
+
+1. Add the logic to `calculations.py` in the `calculate_forbidden_days()` function
+2. Update the `ForbiddenDay` model if new properties are needed
+3. Modify output formatting in `formatters.py` if required
+
+### Adding New Output Formats
+
+To support additional output formats:
+
+1. Create new formatting functions in `formatters.py`
+2. Add command-line options in `cli.py`
+3. Update the main workflow in `processor.py`
+
+### Testing
+
+Test the application with various input scenarios:
+
+```cmd
+# Test with sample data
+python main.py sample_dates.txt
+
+# Test with invalid data
+python main.py test_invalid.txt
+
+# Test export functionality
+python main.py sample_dates.txt output.txt
+```
+
+## Religious Context
+
+This calculator is designed to assist with the observance of Jewish family purity laws (Hilchot Niddah). The calculations are based on traditional Hebrew calendar rules and rabbinic guidelines for determining prohibited periods.
+
+**Important Note**: This software is provided for educational and convenience purposes only. For actual religious observance, always consult with a qualified rabbi or halachic authority.
+
+## License
+
+This project is provided as-is for educational and personal use.
+
+## Contributing
+
+To contribute to this project:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes following the existing code style
+4. Test thoroughly with various input scenarios
+5. Submit a pull request with a clear description of changes
+
+## Support
+
+For questions or issues:
+
+- Check the error messages for common problems
+- Ensure input files follow the correct format
+- Verify that all dependencies are installed
+- Review the example files for proper usage patterns
