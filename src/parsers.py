@@ -4,8 +4,17 @@ Data parsing utilities for the Tahara Calculator.
 This module handles parsing text input into period objects.
 """
 
+import sys
+import os
+
+# Add the parent directory to the Python path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 from pyluach import dates
-from models import MenstrualPeriod
+from src.models import MenstrualPeriod
+from config.config_db import get_config
 
 
 def convert_text_to_menstrual_period(date_text):
@@ -36,5 +45,7 @@ def convert_text_to_menstrual_period(date_text):
             return menstrual_period
         return None
     except (ValueError, IndexError) as error:
-        print(f"Error parsing date '{date_text}': {error}")
+        config = get_config()
+        if config.should_show_parsing_errors():
+            print(f"Error parsing date '{date_text}': {error}")
         return None

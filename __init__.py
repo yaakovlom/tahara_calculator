@@ -19,8 +19,8 @@ __version__ = "1.0.0"
 __author__ = "Yaakov Lombard"
 
 # Import main classes for easy access
-from .models import MenstrualPeriod, ForbiddenDay
-from .cli import main
+from src.models import MenstrualPeriod, ForbiddenDay
+from . import main
 
 # Define what gets imported with "from tahara_calculator import *"
 __all__ = [

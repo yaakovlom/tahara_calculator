@@ -4,6 +4,16 @@ Output formatting utilities for the Tahara Calculator.
 This module handles formatting and displaying calculation results.
 """
 
+import sys
+import os
+
+# Add the parent directory to the Python path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from config.config_db import get_config
+
 # Hebrew text mappings
 TIME_OF_DAY_DICT = {0: "ליל", 1: "יום"}
 WEEKDAY_DICT = {
@@ -28,18 +38,31 @@ def format_output_lines(periods_indexed_by_date, historical_cycle_intervals):
     Returns:
         list: Formatted output lines ready for display or export
     """
-    output_separator = "-" * 25
-    output_content_lines = [f"רשימת הפלגות:\n{historical_cycle_intervals}\n{output_separator}\n"]
+    config = get_config()
+    output_separator = config.get_date_separator()
+    
+    output_content_lines = []
+    
+    # Add cycle intervals if configured to show them
+    if config.get("output.show_cycle_intervals", True):
+        output_content_lines.append(f"רשימת הפלגות:\n{historical_cycle_intervals}\n{output_separator}\n")
 
     for period_date in periods_indexed_by_date:
         current_period = periods_indexed_by_date[period_date]
         
         # Add period header
-        period_header = (
-            f"{period_date.hebrew_date_string()} "
-            f"ב{TIME_OF_DAY_DICT[current_period.time_of_day]} "
-            f"{WEEKDAY_DICT[period_date.weekday()]}:\n"
-        )
+        if config.get("output.show_hebrew_dates", True):
+            period_header = (
+                f"{period_date.hebrew_date_string()} "
+                f"ב{TIME_OF_DAY_DICT[current_period.time_of_day]} "
+                f"{WEEKDAY_DICT[period_date.weekday()]}:\n"
+            )
+        else:
+            period_header = (
+                f"Period {period_date.day}/{period_date.month}/{period_date.year} "
+                f"ב{TIME_OF_DAY_DICT[current_period.time_of_day]} "
+                f"{WEEKDAY_DICT[period_date.weekday()]}:\n"
+            )
         output_content_lines.append(period_header)
         
         # Add forbidden days for this period

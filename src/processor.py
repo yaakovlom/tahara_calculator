@@ -5,8 +5,16 @@ This module contains the main processing logic that coordinates
 all the other modules to perform the calculations.
 """
 
-from parsers import convert_text_to_menstrual_period
-from calculations import calculate_forbidden_days
+import sys
+import os
+
+# Add the parent directory to the Python path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from src.parsers import convert_text_to_menstrual_period
+from src.calculations import calculate_forbidden_days
 
 
 def process_periods_data(period_dates_list):

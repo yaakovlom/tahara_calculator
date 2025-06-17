@@ -6,14 +6,22 @@ all other modules to perform the calculations.
 """
 
 import sys
-from file_operations import read_periods_list_file, export_results
-from processor import (
+import os
+
+# Add the parent directory to the Python path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+from utils.file_operations import read_periods_list_file, export_results
+from src.processor import (
     process_periods_data, 
     calculate_cycle_intervals, 
     calculate_all_forbidden_days, 
     create_periods_index
 )
-from formatters import format_output_lines, print_results
+from utils.formatters import format_output_lines, print_results
+from config.config_db import get_config
 
 
 def get_input_file_path():
@@ -23,31 +31,45 @@ def get_input_file_path():
     Returns:
         str: Path to the input file, or None if not found after retries
     """
+    config = get_config()
+    
     if len(sys.argv) > 1:
         input_file_path = sys.argv[1]
     else:
-        input_file_path = input("Date data file not found. Please enter the date file path:\n")
+        default_file = config.get_default_input_file()
+        input_file_path = input(f"Date data file not found. Please enter the date file path (default: {default_file}):\n")
+        if not input_file_path.strip():
+            input_file_path = default_file
     
-    # Try to read the file up to 3 times
-    for file_read_attempt in range(3):
+    # Try to read the file up to the configured number of times
+    max_attempts = config.get_max_retry_attempts()
+    for file_read_attempt in range(max_attempts):
         period_dates_list = read_periods_list_file(input_file_path)
         if period_dates_list:
             return input_file_path, period_dates_list
         else:
-            input_file_path = input("Date data file not found. Please enter the date file path:\n")
+            if file_read_attempt < max_attempts - 1:  # Don't prompt on last attempt
+                default_file = config.get_default_input_file()
+                input_file_path = input(f"Date data file not found. Please enter the date file path (default: {default_file}):\n")
+                if not input_file_path.strip():
+                    input_file_path = default_file
     
     return None, None
 
 
 def get_output_file_path():
     """
-    Get the output file path from command line arguments.
+    Get the output file path from command line arguments or config.
     
     Returns:
         str: Path to the output file, or None for console output
     """
+    config = get_config()
+    
     if len(sys.argv) > 2:
         return sys.argv[2]
+    elif config.should_auto_export():
+        return config.get_default_output_file()
     return None
 
 

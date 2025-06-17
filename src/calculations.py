@@ -5,9 +5,17 @@ This module contains the main logic for calculating forbidden days
 based on menstrual periods and Hebrew calendar rules.
 """
 
+import sys
+import os
+
+# Add the parent directory to the Python path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 from pyluach import hebrewcal
-from models import ForbiddenDay
-from hebrew_calendar_utils import get_hebrew_month_length
+from src.models import ForbiddenDay
+from utils.hebrew_calendar_utils import get_hebrew_month_length
 
 
 def calculate_forbidden_days(menstrual_period, previous_cycle_intervals=None):
