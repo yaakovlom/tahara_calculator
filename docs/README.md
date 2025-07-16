@@ -16,7 +16,11 @@ The Tahara Calculator processes menstrual period data and calculates various typ
 
 - ✅ **Modular Architecture** - Clean separation of concerns across multiple modules
 - ✅ **Hebrew Calendar Support** - Full integration with Hebrew dates via `pyluach`
+- ✅ **Date Conversion Tools** - Convert between Gregorian and Hebrew calendar dates
+- ✅ **CLI Date Management** - Interactive tools for adding and managing dates
+- ✅ **Multiple Input Formats** - Support for various date formats (DD/MM/YYYY, YYYY-MM-DD, etc.)
 - ✅ **Multiple Output Formats** - Console display or file export
+- ✅ **Configuration Management** - JSON-based settings with CLI management
 - ✅ **Error Handling** - Robust parsing and validation of input data
 - ✅ **Extensible Design** - Easy to add new calculation rules or output formats
 
@@ -58,6 +62,77 @@ Save results to a file:
 python main.py sample_dates.txt output.txt
 ```
 
+### Date Management CLI
+
+#### Adding Dates
+
+Add dates to your input file using familiar Gregorian dates:
+
+```cmd
+# Add a single date
+python cli\dates_cli.py add dates.txt "15/03/2024 1"
+
+# Interactive mode for multiple dates
+python cli\dates_cli.py interactive
+
+# View current dates
+python cli\dates_cli.py list dates.txt
+
+# Show help
+python cli\dates_cli.py help
+```
+
+#### Supported Date Formats
+
+The system accepts both Hebrew and Gregorian dates:
+
+**Gregorian Calendar:**
+- `15/03/2024 1` (DD/MM/YYYY format)
+- `15-03-2024 1` (DD-MM-YYYY format)
+- `2024-03-15 1` (YYYY-MM-DD format)
+
+**Hebrew Calendar:**
+- `8/12/5785 0` (day/month/year format)
+
+**Special Keywords:**
+- `today 1` (Current date, day)
+- `today 0` (Current date, night)
+
+**Time of Day:**
+- `0` = Night (ליל)
+- `1` = Day (יום)
+
+**Examples:**
+```cmd
+# Add today's date (day)
+python cli\dates_cli.py add dates.txt "today 1"
+
+# Add today's date (night)
+python cli\dates_cli.py add dates.txt "today 0"
+
+# Add specific Gregorian date
+python cli\dates_cli.py add dates.txt "15/03/2024 1"
+
+# Add Hebrew date
+python cli\dates_cli.py add dates.txt "8/12/5785 0"
+```
+
+#### Configuration Management
+
+Manage application settings:
+
+```cmd
+# View current configuration
+python config\config_cli.py show
+
+# Update settings
+python config\config_cli.py set files.default_input_file "my_dates.txt"
+python config\config_cli.py set output.auto_export false
+
+# Reset to defaults
+python config\config_cli.py reset
+```
+
 ### Input File Format
 
 Create a text file with one period per line in the format:
@@ -68,6 +143,8 @@ day/month/year time_of_day
 Where:
 - `day/month/year` - Hebrew calendar date (e.g., `8/12/5785`)
 - `time_of_day` - `0` for night (ליל) or `1` for day (יום)
+
+**Note:** You can now input Gregorian dates which will be automatically converted to Hebrew format.
 
 Example (`sample_dates.txt`):
 ```
@@ -82,38 +159,57 @@ Example (`sample_dates.txt`):
 ```
 tahara_calculator/
 ├── main.py                    # Main entry point
-├── cli.py                     # Command-line interface
-├── models.py                  # Data model classes
-├── parsers.py                 # Input parsing utilities
-├── calculations.py            # Core calculation engine
-├── processor.py               # Data processing coordination
-├── formatters.py              # Output formatting
-├── file_operations.py         # File I/O operations
-├── hebrew_calendar_utils.py   # Hebrew calendar utilities
+├── cli/                       # Command-line interface tools
+│   ├── dates_cli.py          # Date management CLI
+│   └── cli.py                # Main CLI interface
+├── src/                       # Core application logic
+│   ├── models.py             # Data model classes
+│   ├── parsers.py            # Input parsing utilities
+│   ├── calculations.py       # Core calculation engine
+│   └── processor.py          # Data processing coordination
+├── utils/                     # Utility modules
+│   ├── date_converter.py     # Date conversion utilities
+│   ├── formatters.py         # Output formatting
+│   ├── file_operations.py    # File I/O operations
+│   └── hebrew_calendar_utils.py # Hebrew calendar utilities
+├── config/                    # Configuration management
+│   ├── config_db.py          # JSON configuration database
+│   └── config_cli.py         # Configuration CLI
+├── tests/                     # Test files and examples
+│   ├── sample_dates.txt      # Example input file
+│   └── test_*.txt            # Test data files
+├── docs/                      # Documentation
+│   └── README.md             # Detailed documentation
 ├── requirements.txt           # Python dependencies
-├── sample_dates.txt          # Example input file
-└── README.md                 # This file
+├── config.json               # Application configuration
+└── dates.txt                 # Default input file
 ```
 
 ### Module Descriptions
 
-#### Core Modules
+#### Core Modules (`src/`)
 
 - **`models.py`** - Defines `MenstrualPeriod` and `ForbiddenDay` classes
 - **`calculations.py`** - Main calculation logic for forbidden days
-- **`parsers.py`** - Converts text input to period objects
+- **`parsers.py`** - Converts text input to period objects (supports both Hebrew and Gregorian dates)
 - **`processor.py`** - Coordinates data processing workflow
 
-#### Interface Modules
+#### CLI Tools (`cli/`)
 
-- **`cli.py`** - Command-line interface and user interaction
+- **`dates_cli.py`** - Interactive date management, adding dates, format conversion
+- **`cli.py`** - Main command-line interface and user interaction
+
+#### Utilities (`utils/`)
+
+- **`date_converter.py`** - Gregorian to Hebrew date conversion
 - **`formatters.py`** - Output formatting and Hebrew text display
 - **`file_operations.py`** - File reading and writing operations
-
-#### Utility Modules
-
 - **`hebrew_calendar_utils.py`** - Hebrew calendar helper functions
-- **`main.py`** - Application entry point
+
+#### Configuration (`config/`)
+
+- **`config_db.py`** - JSON-based configuration database with dot-notation access
+- **`config_cli.py`** - Configuration management CLI
 
 ## Output Format
 
@@ -157,17 +253,42 @@ The application handles various error conditions:
 
 To add new forbidden day calculations:
 
-1. Add the logic to `calculations.py` in the `calculate_forbidden_days()` function
-2. Update the `ForbiddenDay` model if new properties are needed
-3. Modify output formatting in `formatters.py` if required
+1. Add the logic to `src/calculations.py` in the `calculate_forbidden_days()` function
+2. Update the `ForbiddenDay` model in `src/models.py` if new properties are needed
+3. Modify output formatting in `utils/formatters.py` if required
+
+### Adding New Date Formats
+
+To support additional date input formats:
+
+1. Extend the parsing logic in `utils/date_converter.py`
+2. Update the `parse_mixed_date_input()` function for new formats
+3. Add validation in `validate_date_input()` function
+4. Update help text in `get_date_format_help()` function
+
+### Extending CLI Features
+
+To add new CLI commands:
+
+1. Add command logic to `cli/dates_cli.py` or create new CLI modules
+2. Update the main command parser in the `main()` function
+3. Add help text and usage examples
 
 ### Adding New Output Formats
 
 To support additional output formats:
 
-1. Create new formatting functions in `formatters.py`
-2. Add command-line options in `cli.py`
-3. Update the main workflow in `processor.py`
+1. Create new formatting functions in `utils/formatters.py`
+2. Add command-line options in `cli/cli.py`
+3. Update the main workflow in `src/processor.py`
+
+### Configuration Management
+
+To modify application settings:
+
+1. Edit `config.json` directly, or
+2. Use the configuration CLI: `python config/config_cli.py`
+3. Access settings in code via `config.config_db.get_config()`
 
 ### Testing
 
@@ -175,13 +296,30 @@ Test the application with various input scenarios:
 
 ```cmd
 # Test with sample data
-python main.py sample_dates.txt
+python main.py tests/sample_dates.txt
+
+# Test with mixed date formats (includes "today" keyword)
+python main.py tests/test_mixed.txt
+
+# Test with all supported date formats
+python main.py tests/test_all_formats_clean.txt
+
+# Test "today" keyword specifically
+python main.py tests/test_today_clean.txt
 
 # Test with invalid data
-python main.py test_invalid.txt
+python main.py tests/test_invalid.txt
 
 # Test export functionality
-python main.py sample_dates.txt output.txt
+python main.py tests/sample_dates.txt tests/output.txt
+
+# Test date CLI tools
+python cli/dates_cli.py add dates.txt "today 1"
+python cli/dates_cli.py add dates.txt "15/03/2024 1"
+python cli/dates_cli.py list dates.txt
+
+# Test configuration CLI
+python config/config_cli.py show
 ```
 
 ## Religious Context

@@ -1,0 +1,15 @@
+# Test file for "today" keyword functionality
+# Tests various cases of the "today" keyword
+
+# Valid "today" entries
+today 1
+today 0
+TODAY 1
+Today 0
+
+# Invalid "today" entries (should be skipped)
+today 2
+today
+today -1
+today abc
+today 1 extra

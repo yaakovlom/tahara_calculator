@@ -15,11 +15,13 @@ if parent_dir not in sys.path:
 from pyluach import dates
 from src.models import MenstrualPeriod
 from config.config_db import get_config
+from utils.date_converter import parse_mixed_date_input
 
 
 def convert_text_to_menstrual_period(date_text):
     """
     Convert date text to MenstrualPeriod object.
+    Supports both Hebrew and Gregorian date formats.
     
     Args:
         date_text: Text string containing date and time information
@@ -28,20 +30,11 @@ def convert_text_to_menstrual_period(date_text):
         MenstrualPeriod: Parsed period object, or None if parsing failed
     """
     try:
-        parsed_details = date_text.strip().split()
-        if len(parsed_details) < 2:
-            return None
-            
-        date_components = [int(component) for component in parsed_details[0].split("/")]
-        if len(date_components) != 3:
-            return None
-            
-        time_of_day = int(parsed_details[1][0])
-        if time_of_day in [0, 1]:
-            menstrual_period = MenstrualPeriod(
-                dates.HebrewDate(*date_components[::-1]), 
-                time_of_day
-            )
+        # Use the new mixed date parser
+        result = parse_mixed_date_input(date_text)
+        if result:
+            hebrew_date, time_of_day = result
+            menstrual_period = MenstrualPeriod(hebrew_date, time_of_day)
             return menstrual_period
         return None
     except (ValueError, IndexError) as error:

@@ -1,0 +1,4 @@
+today 1
+today 0
+TODAY 1
+Today 0

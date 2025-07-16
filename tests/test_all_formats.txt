@@ -1,0 +1,31 @@
+# Test file for date format validation and parsing
+# This file tests various date formats including the new "today" keyword
+
+# Hebrew dates
+8/12/5785 0
+9/11/5785 1
+10/10/5785 0
+
+# Gregorian dates (DD/MM/YYYY)
+15/03/2024 1
+20/07/2024 0
+
+# Gregorian dates (DD-MM-YYYY)
+15-03-2024 1
+20-07-2024 0
+
+# Gregorian dates (YYYY-MM-DD)
+2024-03-15 1
+2024-07-20 0
+
+# Special keywords
+today 1
+today 0
+
+# Invalid entries (should be skipped)
+invalid/date/format 1
+12/30/5785 2
+not_a_date at all
+today 2
+today
+15/03/2024
